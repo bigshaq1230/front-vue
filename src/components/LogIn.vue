@@ -25,7 +25,7 @@ function handelsubmit() {
 .then(response => {
     if (response.state) {
         // Assuming emit is a valid function in your context
-        emit('test');
+        emit('test',username);
         window.location.hash = "#/";
     } else {
         console.log("user not found");
