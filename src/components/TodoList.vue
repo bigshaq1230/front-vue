@@ -141,10 +141,10 @@ function add() {
         }
     );
     edits.value.push({
-        label:input.value,
-        type:'add',
+        label: input.value,
+        type: 'add',
         info: {
-            state:true
+            state: true
         }
     })
     input.value = "";
@@ -152,22 +152,22 @@ function add() {
 }
 function remove(index) {
     edits.value.push({
-        label:list.value[index].label,
-        type:'remove',
+        label: list.value[index].label,
+        type: 'remove',
         info: {}
     })
-    list.value.splice(index,1)
+    list.value.splice(index, 1)
     update()
 
 }
 function done(index) {
     list.value[index].state = !list.value[index].state;
     edits.value.push({
-        label:list.value[index].label,
-        type:'edit',
+        label: list.value[index].label,
+        type: 'edit',
         info: {
-            collum:'state',
-            value:list.value[index].state
+            collum: 'state',
+            value: list.value[index].state
         }
     })
     update();
@@ -180,13 +180,11 @@ function done(index) {
         <input type="text" v-model="input">
         <button @click="add">Add</button>
         <ul>
-            <span  v-for="(element, index) in list" :key="index" >
-            <li>
-                    <input type="checkbox" v-on:change="done(index)">
-
-                    <span v-if="element.state">{{ element.label }}</span>
-                    <span v-else style="text-decoration: line-through;">{{ element.label }}</span>
-
+            <span v-for="(element, index) in list" :key="index">
+                <li>
+                    <input type="checkbox" v-on:click="done(index)" v-model="element.state">
+                    <span v-if="element.state"  style="text-decoration: line-through;">{{ element.label }}</span>
+                    <span v-else >{{ element.label }}</span>
                     <span @click="remove(index)" style="cursor: pointer;">❌</span>
                 </li>
             </span>
