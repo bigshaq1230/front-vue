@@ -4,21 +4,13 @@ import { ref } from 'vue';
 const props = defineProps(['state', 'username'])
 let logged_in = ref(props.state)
 let username = ref(props.username)
-/*
- flags = enum {
-    'added' newly added so stored locally
-    'removed' to be removed from db
-    'db' means it's stored on the db
-    'edited' really thinking about implimenting this later maybe even now actually
-    'skip' doesn't matter
-}
-    🤓🤓🤓🤓🤓🤓
-*/
+
 
 let list = ref(JSON.parse(localStorage.getItem('list')) || [
-    { label: "do something", state: true, flag: 'local' },
-    { label: "learn backend", state: true, flag: 'local' }
+    { label: "do something", state: true },
+    { label: "learn backend", state: true }
 ])
+let edits = ref([])
 let input = ref("")
 
 function update() {
@@ -28,27 +20,18 @@ function update() {
 // on user open website -> user is not logged in by default
 // when user login -> website refreshes
 if (logged_in.value) {  // this should work
+    let old = list.value;
     pull()
+    HardPush(old)
 }
-
-function push() {
-    let new_list = []
-    for (let i = 0; i < list.value.length; i++) {
-        const element = list.value[i];
-        if (element.flag !== 'db') {
-            new_list.push(element)
-        }
-        if (element.flag === 'removed') {
-            list.value.splice(i, 1)
-        }
-    }
-    fetch('http://localhost:3000/push', {
+function HardPush(list) {
+    fetch('http://localhost:3000/hardpush', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            'list': new_list,
+            'list': list,
             'username': username.value
         })
     })
@@ -64,9 +47,32 @@ function push() {
         .catch(error => {
             console.error('Error:', error);
         });
-    list.value.forEach(element => {
-        element.flag = 'db'
-    });
+}
+function push() {
+
+    fetch('http://localhost:3000/push', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            'list': edits.value,
+            'username': username.value
+        })
+    })
+
+        .then(response => {
+            // Check if the request was successful
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            // Parse the response as JSON
+            edits.value = []
+            return response.json();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
 
 }
 function pull() {
@@ -97,12 +103,10 @@ function pull() {
                     list.value.push({
                         label: element.label,
                         state: element.state,
-                        flag: 'db'
                     })
                 }
                 else {
                     list.value[index].state = element.state
-                    list.value[index].flag = 'db'
                 }
 
             });
@@ -134,21 +138,38 @@ function add() {
         {
             label: input.value,
             state: true,
-            flag: 'added'
         }
     );
+    edits.value.push({
+        label:input.value,
+        type:'add',
+        info: {
+            state:true
+        }
+    })
     input.value = "";
     update();
 }
 function remove(index) {
-    list.value[index].flag = 'removed'
-    //list.value.splice(index, 1);
-    update();
+    edits.value.push({
+        label:list.value[index].label,
+        type:'remove',
+        info: {}
+    })
+    list.value.splice(index,1)
+    update()
 
 }
 function done(index) {
     list.value[index].state = !list.value[index].state;
-    list.value[index].flag = 'edited'
+    edits.value.push({
+        label:list.value[index].label,
+        type:'edit',
+        info: {
+            collum:'state',
+            value:list.value[index].state
+        }
+    })
     update();
 
 }
@@ -160,7 +181,7 @@ function done(index) {
         <button @click="add">Add</button>
         <ul>
             <span  v-for="(element, index) in list" :key="index" >
-            <li  v-if="element.flag != 'removed'">
+            <li>
                     <input type="checkbox" v-on:change="done(index)">
 
                     <span v-if="element.state">{{ element.label }}</span>
