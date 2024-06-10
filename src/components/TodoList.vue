@@ -137,14 +137,14 @@ function add() {
     list.value.push(
         {
             label: input.value,
-            state: true,
+            state: false,
         }
     );
     edits.value.push({
         label: input.value,
         type: 'add',
         info: {
-            state: true
+            state: false
         }
     })
     input.value = "";
@@ -173,6 +173,38 @@ function done(index) {
     update();
 
 }
+//💀💀💀💀💀💀💀💀💀💀💀💀
+//what the hell is this code
+//absolute dog water idc if it works it works
+//should def move every item to it's own compenents
+// next time ☝🤓
+function edit(index) {
+    document.querySelector("#item"+index+" span.edit_btn").style.display = "none"
+    function HandleEdit(event) {
+        if (event.key === 'Enter') {
+            console.log("enter detected")
+            edits.value.push({
+                label: list.value[index].label,
+                type: 'edit',
+                info: {
+                    collum: 'label',
+                    value: document.querySelector("#item"+index+" input[type='text']").value
+
+                }
+            })
+            console.log(edits.value)
+            document.querySelector("#item"+index+" input[type='text']").setAttribute("readonly",true)
+            document.querySelector("#item"+index+" span.edit_btn").style.display = ""
+            list.value[index].label = document.querySelector("#item"+index+" input[type='text']").value
+            update()
+            document.querySelector("#item"+index+" input[type='text']").removeEventListener('keypress', HandleEdit)
+        }
+    }
+
+    document.querySelector("#item"+index+" input[type='text']").removeAttribute("readonly")
+    document.querySelector("#item"+index+" input[type='text']").addEventListener('keypress', HandleEdit)
+
+}
 </script>
 
 <template>
@@ -181,11 +213,15 @@ function done(index) {
         <button @click="add">Add</button>
         <ul>
             <span v-for="(element, index) in list" :key="index">
-                <li>
+                <li :id="'item'+index">
                     <input type="checkbox" v-on:click="done(index)" v-model="element.state">
-                    <span v-if="element.state"  style="text-decoration: line-through;">{{ element.label }}</span>
-                    <span v-else >{{ element.label }}</span>
-                    <span @click="remove(index)" style="cursor: pointer;">❌</span>
+
+                    <input v-if="element.state" style="text-decoration: line-through;" :value="element.label"
+                        readonly="true" type="text">
+                    <input v-else :value="element.label" readonly type="text">
+
+                    <span @click="remove(index)" style="cursor: pointer;" class="remove">❌</span>
+                    <span @click="edit(index)" class="edit_btn">✒️</span>
                 </li>
             </span>
         </ul>
@@ -193,3 +229,14 @@ function done(index) {
         <a v-if="logged_in === true" v-on:click="logged_in = false"> <button>Log Out</button></a>
     </div>
 </template>
+<style>
+.edit_btn {
+    display: none;
+    cursor: pointer;
+}
+
+li:hover .edit_btn {
+    display: inline-block
+}
+
+</style>
